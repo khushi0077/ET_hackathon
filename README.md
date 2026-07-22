@@ -2,7 +2,9 @@
 
 PRAHARI is a next-generation anomaly detection and response orchestrator built for the unique threat landscape of Indian Critical National Infrastructure (CNI).
 
-## Architecture
+## Architecture & UI
+
+![Application Screenshot](docs/screenshot.png)
 
 ![Architecture Diagram](docs/architecture.png)
 
