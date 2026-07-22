@@ -332,7 +332,7 @@ export default function App() {
           </AnimatePresence>
           
           {/* Gated Approvals */}
-          <div className="flex-1 min-h-[250px] bg-slate-900/60 border border-amber-500/20 rounded-2xl flex flex-col overflow-hidden backdrop-blur-xl shadow-2xl relative">
+          <div className="h-[260px] shrink-0 bg-slate-900/60 border border-amber-500/20 rounded-2xl flex flex-col overflow-hidden backdrop-blur-xl shadow-2xl relative">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50" />
             <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3 bg-amber-500/5">
               <ShieldAlert className="w-5 h-5 text-amber-500 animate-pulse" /> 
