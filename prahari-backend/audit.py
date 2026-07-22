@@ -6,12 +6,10 @@ import os
 DB_PATH = "audit.db"
 
 def init_db():
-    if os.path.exists(DB_PATH):
-        os.remove(DB_PATH) # Start fresh for demo
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
-        CREATE TABLE audit_log (
+        CREATE TABLE IF NOT EXISTS audit_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp REAL,
             event_data TEXT,
@@ -20,11 +18,13 @@ def init_db():
             hash TEXT
         )
     ''')
-    # Insert genesis block
-    c.execute(
-        "INSERT INTO audit_log (timestamp, event_data, action, prev_hash, hash) VALUES (?, ?, ?, ?, ?)",
-        (0.0, "GENESIS", "INIT", "0"*64, "0"*64)
-    )
+    # Insert genesis block only if table is empty
+    c.execute("SELECT count(*) FROM audit_log")
+    if c.fetchone()[0] == 0:
+        c.execute(
+            "INSERT INTO audit_log (timestamp, event_data, action, prev_hash, hash) VALUES (?, ?, ?, ?, ?)",
+            (0.0, "GENESIS", "INIT", "0"*64, "0"*64)
+        )
     conn.commit()
     conn.close()
 
