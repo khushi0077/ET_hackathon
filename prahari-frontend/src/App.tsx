@@ -212,7 +212,7 @@ export default function App() {
           <div className="flex bg-slate-900/50 border border-white/10 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl">
             {[
               { label: 'THROUGHPUT', val: `${metrics.throughput_eps} EPS`, color: 'text-white' },
-              { label: 'MTTR', val: metrics.detection_latency_ms > 0 ? `< ${(metrics.detection_latency_ms / 1000 + metrics.llm_latency_s).toFixed(2)}s` : '< 3s', color: 'text-emerald-400' },
+              { label: 'MTTR', val: metrics.detection_latency_ms > 0 ? `${(metrics.detection_latency_ms / 1000 + metrics.llm_latency_s).toFixed(2)}s` : '< 3s', color: 'text-emerald-400' },
               { label: 'THREATS', val: metrics.anomalies_flagged, color: 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]' },
               { label: 'EST. FP RATE', val: `${(metrics.fp_rate * 100).toFixed(2)}%`, color: 'text-indigo-400' },
               { label: 'LLM LATENCY', val: `${metrics.llm_latency_s.toFixed(2)}s`, color: 'text-cyan-400' }
