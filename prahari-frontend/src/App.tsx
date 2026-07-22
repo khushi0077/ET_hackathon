@@ -247,7 +247,7 @@ export default function App() {
                     graphData={topologyData}
                     width={400}
                     height={350}
-                    nodeColor={() => '#818cf8'}
+                    nodeColor={(node) => graphAnomalies.some(a => a.src_ip === node.id) ? '#ef4444' : '#818cf8'}
                     linkColor={() => 'rgba(255,255,255,0.15)'}
                     backgroundColor="transparent"
                     nodeRelSize={4}
@@ -304,7 +304,7 @@ export default function App() {
                     <p className="text-sm font-bold text-white mb-2 flex items-center gap-2">
                       <Zap className="w-4 h-4 text-amber-400" /> {req.action}
                     </p>
-                    <p className="text-xs text-slate-400 mb-4 line-clamp-2 leading-relaxed">{req.explanation}</p>
+                    <p className="text-xs text-slate-400 mb-4 line-clamp-2 leading-relaxed">{req.explanation || "Analysis pending..."}</p>
                     <div className="flex gap-3">
                       <button onClick={() => handleAction(id, 'approve')} className="flex-1 py-2 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 border border-emerald-500/50 text-xs font-bold rounded-lg transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]">APPROVE</button>
                       <button onClick={() => handleAction(id, 'deny')} className="flex-1 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/50 text-xs font-bold rounded-lg transition-all shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]">DENY</button>
@@ -357,7 +357,7 @@ export default function App() {
                     <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-red-500 to-indigo-500" />
                     <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2"><Cpu className="w-3 h-3"/> Gemini 1.5 Flash Analysis</h3>
                     <p className="text-base text-slate-200 leading-relaxed font-light">
-                      {latestAlert.explanation}
+                      {latestAlert.explanation || "Analysis pending..."}
                     </p>
                   </div>
                 </div>

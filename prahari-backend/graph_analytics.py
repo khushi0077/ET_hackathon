@@ -1,16 +1,29 @@
 import networkx as nx
 import time
+from collections import OrderedDict
 
 class GraphAnalytics:
     def __init__(self):
         self.G = nx.DiGraph()
         self.connections = [] # list of (timestamp, src, dst)
+        self.node_lru = OrderedDict()
 
     def add_flow(self, flow):
         src = flow["src_ip"]
         dst = flow["dst_ip"]
         ts = flow["timestamp"]
         
+        for node in [src, dst]:
+            if node not in self.node_lru:
+                if len(self.node_lru) >= 5000:
+                    oldest, _ = self.node_lru.popitem(last=False)
+                    if self.G.has_node(oldest):
+                        self.G.remove_node(oldest)
+                self.node_lru[node] = ts
+            else:
+                self.node_lru.move_to_end(node)
+                self.node_lru[node] = ts
+
         self.G.add_node(src)
         self.G.add_node(dst)
         

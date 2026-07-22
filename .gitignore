@@ -9,3 +9,5 @@ chroma_db/
 dist/
 build/
 .DS_Store
+*.db
+*.sqlite

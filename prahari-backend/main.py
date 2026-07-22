@@ -68,7 +68,7 @@ async def run_simulation_loop():
         similar_incidents = []
         
         # If highly anomalous, do heavy lifting
-        if anomaly_score > 0.8:
+        if anomaly_score > 0.6:
             t_llm_start = time.perf_counter()
             llm_res = await ml_engine.get_llm_explanation(flow)
             t_llm_end = time.perf_counter()

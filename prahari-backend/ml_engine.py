@@ -108,7 +108,7 @@ def score_event(flow):
     # Platt scaling (Logistic Sigmoid) to map raw distance to probability
     # raw_score < 0 means anomaly. We want it to approach 1.0
     try:
-        anomaly_score = 1.0 / (1.0 + math.exp(raw_score * 10))
+        anomaly_score = 1.0 / (1.0 + math.exp(raw_score * 20))
     except OverflowError:
         anomaly_score = 0.0 if raw_score > 0 else 1.0
         
