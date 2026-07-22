@@ -5,9 +5,16 @@ load_dotenv()
 import asyncio
 import json
 import time
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+API_KEY = "prahari-demo-key-2026"
+
+def verify_token(authorization: str = Header(None)):
+    if not authorization or authorization != f"Bearer {API_KEY}":
+        raise HTTPException(status_code=403, detail="Invalid or missing API Key")
+    return True
 
 import sim
 import ml_engine
@@ -28,7 +35,10 @@ app.add_middleware(
 active_connections = []
 
 @app.websocket("/ws/stream")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, token: str = None):
+    if token != API_KEY:
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     active_connections.append(websocket)
     try:
@@ -110,34 +120,35 @@ async def run_graph_heuristics_loop():
             }
             await broadcast_event(event_payload)
 
-@app.get("/audit/verify")
+@app.get("/audit/verify", dependencies=[Depends(verify_token)])
 def verify_audit():
     return audit.verify_chain()
 
-@app.post("/audit/tamper-test")
+@app.post("/audit/tamper-test", dependencies=[Depends(verify_token)])
 def tamper_audit():
     return audit.tamper_test()
 
-@app.get("/graph/topology")
+@app.get("/graph/topology", dependencies=[Depends(verify_token)])
 def get_topology():
     return graph_analytics.graph_engine.get_topology()
 
-@app.get("/orchestrator/pending")
+@app.get("/orchestrator/pending", dependencies=[Depends(verify_token)])
 def get_pending():
     return orchestrator.orchestrator.pending_approvals
 
 class ApprovalReq(BaseModel):
     approval_id: str
+    analyst_id: str = "SYSTEM"
 
-@app.post("/orchestrator/approve")
+@app.post("/orchestrator/approve", dependencies=[Depends(verify_token)])
 def approve_action(req: ApprovalReq):
-    return orchestrator.orchestrator.approve_action(req.approval_id)
+    return orchestrator.orchestrator.approve_action(req.approval_id, req.analyst_id)
 
-@app.post("/orchestrator/deny")
+@app.post("/orchestrator/deny", dependencies=[Depends(verify_token)])
 def deny_action(req: ApprovalReq):
-    return orchestrator.orchestrator.deny_action(req.approval_id)
+    return orchestrator.orchestrator.deny_action(req.approval_id, req.analyst_id)
 
-@app.post("/sim/inject")
+@app.post("/sim/inject", dependencies=[Depends(verify_token)])
 def inject_attack(type: str = "exfiltration"):
     sim.force_attack_queue.append(type)
     return {"status": "injected", "type": type}

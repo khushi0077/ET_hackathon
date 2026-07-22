@@ -25,16 +25,20 @@ def get_behavioral_features(flow):
     if src_ip not in entity_profiles:
         if len(entity_profiles) >= 10000:
             entity_profiles.popitem(last=False)
-        entity_profiles[src_ip] = {"count": 0, "total_bytes": 0, "total_duration": 0}
+        entity_profiles[src_ip] = {"count": 0, "total_bytes": 0, "total_duration": 0, "tolerance": 1.0}
     else:
         entity_profiles.move_to_end(src_ip)
     
+    # Update profile
     prof = entity_profiles[src_ip]
     avg_bytes = prof["total_bytes"] / max(1, prof["count"])
     avg_dur = prof["total_duration"] / max(1, prof["count"])
     
-    byte_dev = abs(flow["bytes_sent"] - avg_bytes)
-    dur_dev = abs(flow["duration"] - avg_dur)
+    tolerance = prof.get("tolerance", 1.0)
+    
+    # Calculate deviations (adjusted by tolerance feedback)
+    byte_dev = abs(flow["bytes_sent"] - avg_bytes) / tolerance
+    dur_dev = abs(flow["duration"] - avg_dur) / tolerance
     
     prof["count"] += 1
     prof["total_bytes"] += flow["bytes_sent"]
@@ -59,6 +63,29 @@ sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 def embed_text(text):
     return sentence_model.encode(text).tolist()
+
+def init_cert_in_memory():
+    """Seed ChromaDB with India-specific CERT-In context to ground the RAG."""
+    advisories = [
+        "CERT-In Advisory CIAD-2023-0012: Ransomware attack observed targeting healthcare sector (AIIMS). Lateral movement via SMB (port 445) and bulk exfiltration.",
+        "CERT-In CIAD-2024-0044: Government portal breach (CBSE pattern). High volume of HTTP POST requests leading to rapid DB exfiltration.",
+        "CERT-In OT-2023-01: Cyber-physical attack on Power Grid infrastructure. Network anomalies correlated with SCADA protocol misuse (overpressure commands)."
+    ]
+    try:
+        # Check if already seeded to prevent duplicates
+        if collection.count() == 0:
+            print("Seeding CERT-In Advisories into ChromaDB...")
+            for i, adv in enumerate(advisories):
+                collection.add(
+                    embeddings=[embed_text(adv)],
+                    documents=[adv],
+                    metadatas=[{"source": "CERT-In", "region": "India", "outcome": "Critical Advisory", "date": "Recent", "analyst": "SYSTEM"}],
+                    ids=[f"cert-in-{i}"]
+                )
+    except Exception as e:
+        print(f"Failed to seed CERT-In DB: {e}")
+
+init_cert_in_memory()
 
 seed_incidents = [
     {"id": "inc-1", "desc": "Port scan detected from unknown internal IP", "outcome": "Blocked at firewall", "date": "2026-05-12", "analyst": "Alice"},
@@ -153,16 +180,29 @@ async def get_llm_explanation(flow):
         }
 
 def get_similar_incidents(description, n=3):
-    query_embedding = embed_text(description)
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=n
-    )
-    matches = []
-    if results['documents'] and len(results['documents']) > 0:
-        for i in range(len(results['documents'][0])):
-            matches.append({
-                "description": results['documents'][0][i],
-                "metadata": results['metadatas'][0][i]
-            })
-    return matches
+    try:
+        emb = embed_text(description)
+        results = collection.query(query_embeddings=[emb], n_results=n)
+        
+        incidents = []
+        if results and results['documents'] and len(results['documents']) > 0:
+            for i in range(len(results['documents'][0])):
+                incidents.append({
+                    "description": results['documents'][0][i],
+                    "metadata": results['metadatas'][0][i]
+                })
+        return incidents
+    except Exception as e:
+        return []
+
+def process_feedback(src_ip, approved):
+    """Real feedback loop that adjusts entity baselines based on human-in-the-loop decisions."""
+    if src_ip in entity_profiles:
+        # If analyst denied (False Positive), increase the tolerance multiplier so they score lower next time
+        if not approved:
+            entity_profiles[src_ip]["tolerance"] = entity_profiles[src_ip].get("tolerance", 1.0) * 1.5
+            print(f"[ML Feedback] Increased tolerance for {src_ip} (Analyst Denied)")
+        else:
+            # If approved (True Positive), reset tolerance
+            entity_profiles[src_ip]["tolerance"] = 1.0
+            print(f"[ML Feedback] Reset tolerance for {src_ip} (Analyst Approved)")

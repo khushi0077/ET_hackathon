@@ -25,7 +25,7 @@ export default function App() {
     let backoffTime = 1000;
     
     const connectWs = () => {
-      wsRef.current = new WebSocket('ws://localhost:8000/ws/stream');
+      wsRef.current = new WebSocket('ws://localhost:8000/ws/stream?token=prahari-demo-key-2026');
       
       wsRef.current.onopen = () => {
         setWsStatus('connected');
@@ -70,7 +70,9 @@ export default function App() {
     
     const fetchTopology = async () => {
       try {
-        const res = await fetch('http://localhost:8000/graph/topology');
+        const res = await fetch('http://localhost:8000/graph/topology', {
+          headers: { 'Authorization': 'Bearer prahari-demo-key-2026' }
+        });
         const data = await res.json();
         setTopologyData(data);
       } catch (e) {
@@ -91,7 +93,9 @@ export default function App() {
 
   const verifyAudit = async () => {
     try {
-      const res = await fetch('http://localhost:8000/audit/verify');
+      const res = await fetch('http://localhost:8000/audit/verify', {
+        headers: { 'Authorization': 'Bearer prahari-demo-key-2026' }
+      });
       const data = await res.json();
       setAuditStatus(data.valid ? 'VERIFIED' : 'TAMPERED');
     } catch (e) {
@@ -101,7 +105,9 @@ export default function App() {
 
   const fetchPendingApprovals = async () => {
     try {
-      const res = await fetch('http://localhost:8000/orchestrator/pending');
+      const res = await fetch('http://localhost:8000/orchestrator/pending', {
+        headers: { 'Authorization': 'Bearer prahari-demo-key-2026' }
+      });
       const data = await res.json();
       setPendingApprovals(data);
     } catch (e) {
@@ -113,8 +119,11 @@ export default function App() {
     try {
       await fetch(`http://localhost:8000/orchestrator/${type}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approval_id: id })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer prahari-demo-key-2026'
+        },
+        body: JSON.stringify({ approval_id: id, analyst_id: 'SOC-Tier2-K.0077' })
       });
       fetchPendingApprovals();
     } catch (e) {
@@ -185,7 +194,10 @@ export default function App() {
                 </button>
               </div>
               <button
-                onClick={() => fetch('http://localhost:8000/sim/inject?type=exfiltration', { method: 'POST' })}
+                onClick={() => fetch('http://localhost:8000/sim/inject?type=exfiltration', { 
+                  method: 'POST',
+                  headers: { 'Authorization': 'Bearer prahari-demo-key-2026' }
+                })}
                 className="mt-1 px-3 py-0.5 bg-red-950 hover:bg-red-900 border border-red-800 text-red-400 text-[9px] font-bold rounded transition-colors"
                 title="Inject High-Severity Attack"
               >
