@@ -153,7 +153,7 @@ def inject_attack(type: str = "exfiltration"):
     sim.force_attack_queue.append(type)
     return {"status": "injected", "type": type}
 
-@app.get("/audit/export")
+@app.get("/audit/export", dependencies=[Depends(verify_token)])
 def export_audit():
     import sqlite3
     conn = sqlite3.connect(audit.DB_PATH)

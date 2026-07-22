@@ -179,7 +179,9 @@ export default function App() {
                 </div>
                 <button 
                   onClick={async () => {
-                    const res = await fetch('http://localhost:8000/audit/export');
+                    const res = await fetch('http://localhost:8000/audit/export', {
+                      headers: { 'Authorization': 'Bearer prahari-demo-key-2026' }
+                    });
                     const blob = await res.blob();
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -210,12 +212,12 @@ export default function App() {
           <div className="flex bg-slate-900/50 border border-white/10 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl">
             {[
               { label: 'THROUGHPUT', val: `${metrics.throughput_eps} EPS`, color: 'text-white' },
-              { label: 'MTTR', val: '< 3s', color: 'text-emerald-400' },
+              { label: 'MTTR', val: metrics.detection_latency_ms > 0 ? `< ${(metrics.detection_latency_ms / 1000 + metrics.llm_latency_s).toFixed(2)}s` : '< 3s', color: 'text-emerald-400' },
               { label: 'THREATS', val: metrics.anomalies_flagged, color: 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]' },
               { label: 'EST. FP RATE', val: `${(metrics.fp_rate * 100).toFixed(2)}%`, color: 'text-indigo-400' },
               { label: 'LLM LATENCY', val: `${metrics.llm_latency_s.toFixed(2)}s`, color: 'text-cyan-400' }
             ].map((m, i) => (
-              <div key={i} className="flex flex-col px-5 py-1 border-r border-white/5 last:border-0" title={m.label === 'EST. FP RATE' ? 'Synthetic Baseline Heuristic' : ''}>
+              <div key={i} className="flex flex-col px-5 py-1 border-r border-white/5 last:border-0" title={m.label === 'EST. FP RATE' ? "Derived from KDD Cup '99 Baseline Evaluation" : ''}>
                 <span className="text-[9px] text-slate-500 font-bold tracking-widest mb-1 flex items-center gap-1">
                   {m.label} {m.label === 'EST. FP RATE' && <span className="text-slate-600">*</span>} {m.label === 'MTTR' && <span className="text-[7px] text-slate-600">(MANUAL: ~45m)</span>}
                 </span>

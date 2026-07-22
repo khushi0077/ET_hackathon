@@ -83,7 +83,7 @@ def run_evaluation():
     f1 = 2 * (precision * recall) / max(0.0001, (precision + recall))
 
     print("\n" + "="*40)
-    print("PRAHARI REAL-WORLD BENCHMARK (NSL-KDD Subset)")
+    print("PRAHARI REAL-WORLD BENCHMARK (KDD Cup '99 SA Subset)")
     print("="*40)
     print(f"Total Events:      {len(y)}")
     print(f"Threshold:         {threshold}")

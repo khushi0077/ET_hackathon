@@ -4,10 +4,10 @@ PRAHARI is a next-generation anomaly detection and response orchestrator built f
 
 ## Architecture
 
-![Architecture Diagram](/home/khushiii/.gemini/antigravity/brain/51e52d4e-d192-4d77-9edc-a0b578e387db/prahari_architecture_1784737242551.png)
+![Architecture Diagram](docs/architecture.png)
 
 *   **Ingestion:** Simulates real-time network flow and OT (SCADA) telemetry.
-*   **Detection:** Sklearn `IsolationForest` continuously scores anomalies. (Evaluated on NSL-KDD benchmark).
+*   **Detection:** Sklearn `IsolationForest` continuously scores anomalies. (Evaluated on KDD Cup '99 benchmark).
 *   **Attribution (RAG):** High-confidence threats are routed to Gemini Flash 1.5, grounded by an India-context ChromaDB seeded with CERT-In advisories.
 *   **Orchestration:** Low-risk recon is auto-contained. High-risk lateral movement triggers a human-in-the-loop SOC approval flow.
 *   **Auditability:** Every decision (AI or Analyst) is hash-chained in an append-only SQLite ledger to meet legal admissibility standards.
@@ -19,7 +19,7 @@ PRAHARI is a next-generation anomaly detection and response orchestrator built f
 
 ## Real-World Grounding & Evaluation
 *   **Vulnerability Intel:** Live integration with the NVD API to prioritize unpatched infrastructure.
-*   **Authentic Benchmarking:** Pre-evaluated against the standard NSL-KDD dataset to ensure robust baseline performance outside of simulated traffic.
+*   **Authentic Benchmarking:** Pre-evaluated against the standard KDD Cup '99 (SA subset) dataset to ensure robust baseline performance outside of simulated traffic.
 
 ## Setup Instructions
 
