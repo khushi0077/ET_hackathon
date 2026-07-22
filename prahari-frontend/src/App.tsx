@@ -209,7 +209,7 @@ export default function App() {
           </div>
 
           {/* Premium Metrics Strip */}
-          <div className="flex bg-slate-900/50 border border-white/10 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl">
+          <div className="flex bg-gradient-to-r from-slate-900/80 to-slate-800/80 border border-white/20 rounded-2xl p-1.5 shadow-2xl backdrop-blur-2xl">
             {[
               { label: 'THROUGHPUT', val: `${metrics.throughput_eps} EPS`, color: 'text-white' },
               { label: 'MTTR', val: metrics.detection_latency_ms > 0 ? `${(metrics.detection_latency_ms / 1000 + metrics.llm_latency_s).toFixed(2)}s` : '< 3s', color: 'text-emerald-400' },
@@ -233,7 +233,7 @@ export default function App() {
         <div className="col-span-4 flex flex-col gap-8 min-h-0">
           
           {/* Telemetry Stream */}
-          <div className="h-[400px] shrink-0 bg-slate-900/40 border border-white/10 rounded-2xl flex flex-col overflow-hidden backdrop-blur-md shadow-2xl">
+          <div className="h-[280px] shrink-0 bg-slate-900/40 border border-white/10 rounded-2xl flex flex-col overflow-hidden backdrop-blur-xl shadow-2xl">
             <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
               <div className="flex items-center gap-4">
                 <button 
@@ -268,10 +268,10 @@ export default function App() {
                       key={f.timestamp + i} 
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className={`text-[11px] font-mono p-2.5 rounded-lg border flex items-center justify-between ${
+                      className={`text-[11px] font-mono p-2.5 rounded-lg border flex items-center justify-between transition-all duration-300 hover:scale-[1.01] ${
                         f.is_attack 
-                          ? 'bg-red-950/30 text-red-300 border-red-500/30 shadow-[inset_0_0_20px_rgba(239,68,68,0.1)]' 
-                          : 'bg-white/[0.02] text-slate-400 border-white/5 hover:bg-white/5 transition-colors'
+                          ? 'bg-red-950/30 text-red-300 border-red-500/30 shadow-[inset_0_0_20px_rgba(239,68,68,0.1)] hover:shadow-[inset_0_0_30px_rgba(239,68,68,0.2)] hover:bg-red-900/40' 
+                          : 'bg-white/[0.02] text-slate-400 border-white/5 hover:bg-white/10'
                       }`}
                     >
                       <div className="flex flex-col gap-1">
@@ -332,7 +332,7 @@ export default function App() {
           </AnimatePresence>
           
           {/* Gated Approvals */}
-          <div className="h-[300px] bg-slate-900/60 border border-amber-500/20 rounded-2xl flex flex-col overflow-hidden backdrop-blur-md shadow-2xl relative">
+          <div className="flex-1 min-h-[250px] bg-slate-900/60 border border-amber-500/20 rounded-2xl flex flex-col overflow-hidden backdrop-blur-xl shadow-2xl relative">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50" />
             <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3 bg-amber-500/5">
               <ShieldAlert className="w-5 h-5 text-amber-500 animate-pulse" /> 
@@ -349,7 +349,7 @@ export default function App() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9, height: 0 }}
-                    className="bg-black/50 p-4 rounded-xl border border-white/10 hover:border-amber-500/30 transition-colors shadow-lg"
+                    className="bg-black/50 p-4 rounded-xl border border-white/10 hover:border-amber-500/50 hover:bg-black/80 hover:shadow-[0_0_25px_rgba(245,158,11,0.2)] transition-all shadow-lg"
                   >
                     <p className="text-sm font-bold text-white mb-2 flex items-center gap-2">
                       <Zap className="w-4 h-4 text-amber-400" /> {req.action}
@@ -395,15 +395,15 @@ export default function App() {
                 <div className="relative">
                   <div className="absolute -inset-4 bg-red-500/5 blur-xl rounded-3xl -z-10" />
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="px-4 py-2 bg-red-950/50 text-red-400 text-sm font-black rounded-lg border border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                    <div className="px-5 py-2.5 bg-gradient-to-r from-red-950/80 to-red-900/50 text-red-400 text-sm font-black rounded-xl border border-red-500/40 shadow-[0_0_25px_rgba(239,68,68,0.3)] animate-pulse">
                       THREAT SCORE: {(latestAlert.score * 100).toFixed(1)}%
                     </div>
-                    <div className="px-4 py-2 bg-indigo-950/50 text-indigo-400 text-sm font-bold rounded-lg border border-indigo-500/30 font-mono">
+                    <div className="px-5 py-2.5 bg-gradient-to-r from-indigo-950/80 to-indigo-900/50 text-indigo-300 text-sm font-bold rounded-xl border border-indigo-500/40 font-mono shadow-[0_0_20px_rgba(99,102,241,0.2)]">
                       MITRE ATT&CK: {latestAlert.technique}
                     </div>
                   </div>
                   
-                  <div className="bg-black/60 p-6 rounded-2xl border border-white/10 relative overflow-hidden">
+                  <div className="bg-gradient-to-br from-black/80 to-slate-900/80 p-7 rounded-2xl border border-white/10 relative overflow-hidden backdrop-blur-xl shadow-2xl">
                     <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-red-500 to-indigo-500" />
                     <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2"><Cpu className="w-3 h-3"/> Gemini 1.5 Flash Analysis</h3>
                     <p className="text-base text-slate-200 leading-relaxed font-light">
