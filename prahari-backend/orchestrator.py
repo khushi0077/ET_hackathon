@@ -54,6 +54,15 @@ class ResponseOrchestrator:
         if anomaly_score > 0.6:
             self.stats["anomalies_flagged"] += 1
             
+            # OT/IT correlation check
+            ot_warning = ""
+            if "ot_telemetry" in flow:
+                ot = flow["ot_telemetry"]
+                if ot.get("pressure", 0) > 150 or ot.get("temperature", 0) > 60:
+                    ot_warning = " | ⚠️ COMPOUND RISK: Cyber-Physical (OT) anomaly detected!"
+                    if explanation:
+                        explanation += "\n\nCRITICAL CONTEXT: IT network anomaly perfectly correlates with physical SCADA parameter deviation (Overpressure/Overheat detected). Potential cyber-physical attack in progress."
+
             # Check external CVE CMDB
             cve_info = check_cve_exposure(flow)
             cve_warning = ""
@@ -63,16 +72,16 @@ class ResponseOrchestrator:
                     explanation += f"\n\nCRITICAL CONTEXT: The target asset is running {cve_info['service']} which is known to be vulnerable to {cve_info['cve']}."
             
             # Mock criticality check
-            is_critical = flow["dst_ip"].endswith(".1") or flow["dst_port"] in [22, 3389] or cve_info is not None
+            is_critical = flow["dst_ip"].endswith(".1") or flow["dst_port"] in [22, 3389] or cve_info is not None or ot_warning != ""
             
             if not is_critical:
                 action = f"AUTO-CONTAIN: Blocked {flow['src_ip']} to {flow['dst_ip']}"
                 audit.log_action(flow["timestamp"], flow, action)
                 self.stats["auto_resolved"] += 1
-                return {"status": "auto_resolved", "action": action}
+                return {"status": "auto_resolved", "action": action, "explanation": "Pattern matches low-risk reconnaissance or automated scanning. Auto-contained at perimeter firewall to prevent fatigue."}
             else:
                 approval_id = str(uuid.uuid4())
-                action = f"PENDING APPROVAL: Isolate {flow['dst_ip']}?{cve_warning}"
+                action = f"PENDING APPROVAL: Isolate {flow['dst_ip']}?{cve_warning}{ot_warning}"
                 self.pending_approvals[approval_id] = {
                     "flow": flow,
                     "action": action,

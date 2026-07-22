@@ -136,3 +136,30 @@ def approve_action(req: ApprovalReq):
 @app.post("/orchestrator/deny")
 def deny_action(req: ApprovalReq):
     return orchestrator.orchestrator.deny_action(req.approval_id)
+
+@app.post("/sim/inject")
+def inject_attack(type: str = "exfiltration"):
+    sim.force_attack_queue.append(type)
+    return {"status": "injected", "type": type}
+
+@app.get("/audit/export")
+def export_audit():
+    import sqlite3
+    conn = sqlite3.connect(audit.DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT id, timestamp, event_data, action, prev_hash, hash FROM audit_log ORDER BY id ASC")
+    rows = c.fetchall()
+    conn.close()
+    
+    export_data = []
+    for r in rows:
+        export_data.append({
+            "id": r[0],
+            "timestamp": r[1],
+            "event_data": r[2],
+            "action": r[3],
+            "prev_hash": r[4],
+            "hash": r[5]
+        })
+    from fastapi.responses import JSONResponse
+    return JSONResponse(content={"chain": export_data})

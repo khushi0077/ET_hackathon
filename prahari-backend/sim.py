@@ -11,6 +11,8 @@ SRC_IPS = [fake.ipv4_private() for _ in range(50)]
 DST_IPS = [fake.ipv4_private() for _ in range(50)]
 ATTACK_TYPES = ["port_scan", "dos_burst", "brute_force", "lateral_movement", "exfiltration"]
 
+force_attack_queue = []
+
 def generate_base_flow():
     src_ip = random.choice(SRC_IPS)
     dst_ip = random.choice(DST_IPS)
@@ -24,7 +26,12 @@ def generate_base_flow():
         "bytes_recv": random.randint(100, 5000),
         "duration": random.uniform(0.1, 2.0),
         "is_attack": False,
-        "attack_type": None
+        "attack_type": None,
+        "ot_telemetry": {
+            "pressure": round(random.uniform(90.0, 110.0), 2),
+            "temperature": round(random.uniform(35.0, 45.0), 2),
+            "valve_status": "OPEN"
+        }
     }
 
 def inject_attack(flow):
@@ -46,6 +53,11 @@ def inject_attack(flow):
     elif attack_type == "exfiltration":
         flow["bytes_sent"] = random.randint(1000000, 5000000)
         
+    if attack_type in ["lateral_movement", "exfiltration", "dos_burst"]:
+        flow["ot_telemetry"]["pressure"] = round(random.uniform(200.0, 350.0), 2)
+        flow["ot_telemetry"]["temperature"] = round(random.uniform(80.0, 120.0), 2)
+        flow["ot_telemetry"]["valve_status"] = "CLOSED_ERR"
+        
     return flow
 
 async def event_stream():
@@ -53,8 +65,12 @@ async def event_stream():
     while True:
         flow = generate_base_flow()
         
-        # 5% chance of attack
-        if random.random() < 0.05:
+        # 5% chance of attack or forced attack
+        if force_attack_queue:
+            forced_type = force_attack_queue.pop(0)
+            flow = inject_attack(flow)
+            flow["attack_type"] = forced_type
+        elif random.random() < 0.05:
             flow = inject_attack(flow)
             
         yield flow

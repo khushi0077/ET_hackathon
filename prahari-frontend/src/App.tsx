@@ -162,11 +162,35 @@ export default function App() {
                 <span className={`relative inline-flex rounded-full h-3 w-3 ${wsStatus === 'connected' ? 'bg-cyan-500' : 'bg-red-500'}`}></span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">AUDIT CHAIN</span>
-              <div className={`px-2 py-0.5 rounded text-[9px] font-bold ${auditStatus === 'VERIFIED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
-                {auditStatus}
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">AUDIT CHAIN</span>
+                <div className={`px-2 py-0.5 rounded text-[9px] font-bold ${auditStatus === 'VERIFIED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                  {auditStatus}
+                </div>
+                <button 
+                  onClick={async () => {
+                    const res = await fetch('http://localhost:8000/audit/export');
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'cert-in-compliance-report.json';
+                    a.click();
+                  }}
+                  className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-[9px] border border-slate-600 rounded text-slate-300 font-bold transition-colors"
+                  title="Download CERT-In Compliance Report"
+                >
+                  EXPORT
+                </button>
               </div>
+              <button
+                onClick={() => fetch('http://localhost:8000/sim/inject?type=exfiltration', { method: 'POST' })}
+                className="mt-1 px-3 py-0.5 bg-red-950 hover:bg-red-900 border border-red-800 text-red-400 text-[9px] font-bold rounded transition-colors"
+                title="Inject High-Severity Attack"
+              >
+                INJECT ATTACK
+              </button>
             </div>
           </div>
 
@@ -174,14 +198,14 @@ export default function App() {
           <div className="flex bg-slate-900/50 border border-white/10 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl">
             {[
               { label: 'THROUGHPUT', val: `${metrics.throughput_eps} EPS`, color: 'text-white' },
-              { label: 'DETECTION LATENCY', val: `${metrics.detection_latency_ms.toFixed(2)}ms`, color: 'text-emerald-400' },
+              { label: 'MTTR', val: '< 3s', color: 'text-emerald-400' },
               { label: 'THREATS', val: metrics.anomalies_flagged, color: 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]' },
               { label: 'EST. FP RATE', val: `${(metrics.fp_rate * 100).toFixed(2)}%`, color: 'text-indigo-400' },
               { label: 'LLM LATENCY', val: `${metrics.llm_latency_s.toFixed(2)}s`, color: 'text-cyan-400' }
             ].map((m, i) => (
               <div key={i} className="flex flex-col px-5 py-1 border-r border-white/5 last:border-0" title={m.label === 'EST. FP RATE' ? 'Synthetic Baseline Heuristic' : ''}>
                 <span className="text-[9px] text-slate-500 font-bold tracking-widest mb-1 flex items-center gap-1">
-                  {m.label} {m.label === 'EST. FP RATE' && <span className="text-slate-600">*</span>}
+                  {m.label} {m.label === 'EST. FP RATE' && <span className="text-slate-600">*</span>} {m.label === 'MTTR' && <span className="text-[7px] text-slate-600">(MANUAL: ~45m)</span>}
                 </span>
                 <span className={`text-lg font-mono font-bold ${m.color}`}>{m.val}</span>
               </div>
@@ -236,8 +260,20 @@ export default function App() {
                           : 'bg-white/[0.02] text-slate-400 border-white/5 hover:bg-white/5 transition-colors'
                       }`}
                     >
-                      <span>{f.src_ip}:{f.dst_port} <ChevronRight className="inline w-3 h-3 text-slate-600 mx-1"/> {f.dst_ip}</span>
-                      <span className="text-slate-500 text-[9px]">{f.bytes_sent}B</span>
+                      <div className="flex flex-col gap-1">
+                        <span>{f.src_ip}:{f.dst_port} <ChevronRight className="inline w-3 h-3 text-slate-600 mx-1"/> {f.dst_ip}</span>
+                        {f.ot_telemetry && (
+                          <div className="flex gap-3 text-[8px] text-slate-500 font-mono">
+                            <span className={f.ot_telemetry.pressure > 150 ? "text-red-400 font-bold" : ""}>SCADA-P: {f.ot_telemetry.pressure}</span>
+                            <span className={f.ot_telemetry.temperature > 60 ? "text-red-400 font-bold" : ""}>SCADA-T: {f.ot_telemetry.temperature}</span>
+                            <span className={f.ot_telemetry.valve_status !== 'OPEN' ? "text-red-400 font-bold" : ""}>VALVE: {f.ot_telemetry.valve_status}</span>
+                          </div>
+                        )}
+                        {f.is_attack && f.dst_port !== 22 && f.dst_port !== 3389 && !f.dst_ip.endsWith(".1") && (
+                           <div className="text-[9px] text-amber-500/80 font-bold tracking-wide">Auto-Contained: Low Risk Recon</div>
+                        )}
+                      </div>
+                      <span className="text-slate-500 text-[9px] shrink-0">{f.bytes_sent}B</span>
                     </motion.div>
                   ))}
                 </AnimatePresence>

@@ -53,8 +53,8 @@ model.fit(X_train)
 print("IsolationForest ready.")
 
 # ChromaDB Setup
-chroma_client = chromadb.Client()
-collection = chroma_client.create_collection(name="incident_memory")
+chroma_client = chromadb.PersistentClient(path="./chroma_db")
+collection = chroma_client.get_or_create_collection(name="incident_memory")
 sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 def embed_text(text):
